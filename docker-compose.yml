@@ -58,7 +58,7 @@ services:
             - LETSENCRYPT_HOST=site2.com
             - LETSENCRYPT_EMAIL=email@site2.com
         volumes:
-            - ./site/site1.com:/etc/nginx/conf.d
+            - ./site/site2.com:/etc/nginx/conf.d
 volumes:
     vhost:
 # networks:
