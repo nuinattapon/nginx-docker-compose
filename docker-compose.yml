@@ -6,7 +6,7 @@ services:
         build:
             context: ./client
             dockerfile: Dockerfile.dev
-        image: website-nextjs
+        image: client-nextjs
         ports:
             - 3000:3000
         volumes:
@@ -14,6 +14,53 @@ services:
             - ./client:/app
         environment:
             - CHOKIDAR_USEPOLLING=true
+    nginx-proxy:
+        container_name: nginx-proxy
+        image: jwilder/nginx-proxy
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./nginx-letsencrypt/current/public:/usr/share/nginx/html
+            - ./nginx-letsencrypt/certs:/etc/nginx/certs:ro
+            - vhost:/etc/nginx/vhost.d
+            # - /usr/share/nginx/html
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+        labels:
+            - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
+
+    letsencrypt:
+        container_name: letsencrypt
+        image: jrcs/letsencrypt-nginx-proxy-companion
+        restart: always
+        volumes:
+            - ./nginx-letsencrypt/certs:/etc/nginx/certs:rw
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - vhost:/etc/nginx/vhost.d
+            - ./nginx-letsencrypt/current/public:/usr/share/nginx/html
+    nginx-site1:
+        container_name: nginx-site1
+        image: nginx:alpine
+        restart: always
+        environment:
+            - VIRTUAL_HOST=site1.com
+            - LETSENCRYPT_HOST=site1.com
+            - LETSENCRYPT_EMAIL=email@site1.com
+        volumes:
+            - ./site/site1.com:/etc/nginx/conf.d
+    nginx-site2:
+        container_name: nginx-site2
+        image: nginx:alpine
+        restart: always
+        environment:
+            - VIRTUAL_HOST=site2.com
+            - LETSENCRYPT_HOST=site2.com
+            - LETSENCRYPT_EMAIL=email@site2.com
+        volumes:
+            - ./site/site1.com:/etc/nginx/conf.d
+volumes:
+    vhost:
 # networks:
 #     default:
 #         external:
